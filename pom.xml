@@ -36,7 +36,7 @@
         <targetMapperProject>${basedir}/uploader-web/src/main/java</targetMapperProject>
         <targetModelProject>${basedir}/uploader-web/src/main/java</targetModelProject>
         <targetMapperPackage>org.fanti.uploader.server.mapper</targetMapperPackage>
-        <targetModelPackage>org.fanti.uploader.server.bean.dto.view</targetModelPackage>
+        <targetModelPackage>org.fanti.uploader.server.bean.dto</targetModelPackage>
         <!--  XML生成路径  -->
         <targetResourcesProject>${basedir}/uploader-web/src/main/resources</targetResourcesProject>
         <targetXMLPackage>mapper</targetXMLPackage>
@@ -259,6 +259,12 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>3.17</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.3.1</version>
         </dependency>
     </dependencies>
 
