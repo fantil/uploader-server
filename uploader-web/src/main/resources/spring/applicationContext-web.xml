@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <context:component-scan base-package="org.fanti"/>
+    <context:property-placeholder location="classpath*:log4j.properties,classpath*:properties/*.properties,classpath*:properties/*/*.properties"/>
+    <bean id="propertyConfigurer"  class="org.fanti.uploader.server.property.PropertyConfigure">
+        <property name="locations">
+            <value>classpath*:properties/*/*.properties</value>
+        </property>
+    </bean>
+
+
+    <!--对应的post方法需要制定 @RequestBody,否则验签中的bizData获取值时为null则导致验签不通过-->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean id="fastJsonHttpMessageConverter"
+                  class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+                <property name="fastJsonConfig">
+                    <bean class="com.alibaba.fastjson.support.config.FastJsonConfig">
+                        <property name="features">
+                            <list>
+                                <value>AllowArbitraryCommas</value>
+                                <value>AllowUnQuotedFieldNames</value>
+                            </list>
+                        </property>
+                        <property name="serializerFeatures">
+                            <list>
+                                <!--这一行配置可避免出现$ref的问题-->
+                                <value>DisableCircularReferenceDetect</value>
+                            </list>
+                        </property>
+                        <property name="dateFormat" value="yyyy-MM-dd HH:mm:ss"></property>
+                    </bean>
+                </property>
+            </bean>
+            <bean id="formHttpMessageConverter"
+                  class="org.springframework.http.converter.FormHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>application/x-www-form-urlencoded;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+
+    <task:annotation-driven executor="internalExecutor" scheduler="scheduler"/>
+    <task:executor id="internalExecutor" pool-size="10" rejection-policy="CALLER_RUNS"/>
+    <task:scheduler id="scheduler" pool-size="5"/>
+
+
+    <!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value=""/>
+        <property name="suffix" value=""/>
+    </bean>
+
+
+    <mvc:view-controller path="/" view-name="index.jsp"/>
+    <mvc:resources mapping="/assets/**" location="/assets/"/>
+
+</beans>
