@@ -1,0 +1,143 @@
+package org.fanti.uploader.server.util;
+
+import com.alibaba.fastjson.JSON;
+import org.apache.commons.fileupload.FileItem;
+import org.fanti.uploader.server.bean.FileInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.List;
+
+/**
+ * Description:
+ *
+ * @author ftk
+ * @date 2018/8/26
+ */
+
+public class UploadUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadUtil.class);
+
+    public static FileInfo handleUpload(List<FileItem> list, String uploadFolder) {
+        if (list == null) {
+            return null;
+        }
+
+        FileInfo fileInfo = new FileInfo();
+        FileItem fileContent = null;
+
+        //遍历list，得到用于封装第一个上传输入项数据fileItem对象
+        for (FileItem item : list) {
+
+            if (item.isFormField()) {
+                //得到的是普通输入项
+                String fieldName = item.getFieldName();  //得到输入项的名称
+                String value = item.getString();
+//                LOGGER.info("field:{}, value:{}" , fieldName, value);
+                initFileInfo(fileInfo, fieldName, value);
+            } else {
+                fileContent = item;
+            }
+        }
+
+        if (fileContent != null) {
+            initFileContent(fileInfo, fileContent, uploadFolder);
+        }
+
+        LOGGER.info("fileInfo:{}", JSON.toJSONString(fileInfo, true));
+        return fileInfo;
+    }
+
+
+    /**
+     * 加载文件分片信息
+     * @param fileInfo 文件分片信息
+     * @param fieldName 当前取到的字段名称
+     * @param value 当前取到的字段值
+     * @return 文件分片信息
+     */
+    private static FileInfo initFileInfo(FileInfo fileInfo, String fieldName, String value) {
+        if (fileInfo == null) {
+            fileInfo = new FileInfo();
+        }
+
+        switch (fieldName) {
+            case "chunkNumber":
+                fileInfo.setChunkNumber(Integer.parseInt(value));
+                break;
+            case "totalChunks":
+                fileInfo.setTotalChunks(Integer.parseInt(value));
+                break;
+            case "currentChunkSize":
+                fileInfo.setCurrentChunkSize(Long.parseLong(value));
+                break;
+            case "chunkSize":
+                fileInfo.setChunkSize(Long.parseLong(value));
+                break;
+            case "totalSize":
+                fileInfo.setTotalSize(Long.parseLong(value));
+                break;
+            case "identifier":
+                fileInfo.setIdentifier(value);
+                break;
+            case "filename":
+                fileInfo.setFilename(value);
+                break;
+            case "relativePath":
+                fileInfo.setRelativePath(value);
+                break;
+            default:
+                LOGGER.info("field:{}, value:{}", fieldName, value);
+                break;
+        }
+
+        return fileInfo;
+    }
+
+    private static FileInfo initFileContent(FileInfo fileInfo, FileItem fileContent, String uploadFolder) {
+        try {
+            //得到上传输入项
+            String filename = fileContent.getName();  //得到上传文件名
+            LOGGER.info("filename:{}", filename);
+            filename = filename.substring(filename.lastIndexOf("\\") + 1 );
+            InputStream in = fileContent.getInputStream();   //得到上传数据
+            int len = 0;
+            byte[] buffer = new byte[1024];
+
+            File file = null;
+            if (fileInfo.getTotalChunks() > 1) {
+                if (fileInfo.getChunkNumber() > 0) {
+                    file = new File(uploadFolder + "\\" + filename + ".part" + fileInfo.getChunkNumber());
+                } else {
+                    LOGGER.error("文件分片编号有误,请检查分片信息:{}", JSON.toJSONString(fileInfo));
+                }
+            } else {
+                file = new File(uploadFolder + "\\" + filename);
+            }
+            if (!file.exists()) {
+                file.createNewFile();
+            } else {
+                LOGGER.error("当前文件夹中已存在同名文件。");
+                fileInfo.setFile(file);
+            }
+
+            FileOutputStream out = new FileOutputStream(file);  //向upload目录中写入文件
+            while ((len = in.read(buffer)) > 0 ) {
+                out.write(buffer, 0, len);
+            }
+
+            in.close();
+            out.close();
+
+            fileInfo.setFile(file);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+
+
+        return fileInfo;
+    }
+}

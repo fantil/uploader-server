@@ -40,6 +40,8 @@ public class UploaderController extends BaseController {
     @ResponseBody
     @RequestMapping(value = "upload", method = RequestMethod.POST)
     public ResultDTO upload (HttpServletRequest request) {
+        long start = System.currentTimeMillis();
+        LOGGER.info("----------------- start upload -------------------");
         try {
             //1.得到解析器工厂
             DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -58,6 +60,9 @@ public class UploaderController extends BaseController {
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
+
+        LOGGER.info("time expired:{}ms", (System.currentTimeMillis() - start));
+        LOGGER.info("----------------- end upload -------------------");
 
         return ajaxDoneSuccess();
     }
