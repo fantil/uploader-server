@@ -9,9 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -29,8 +26,22 @@ public class UploadServiceImpl implements UploadService {
     @Value("${upload.folder}")
     private String uploadFolder;
 
+    @Value("${tmp.upload.folder}")
+    private String tmpUploadFolder;
+
     @Override
     public void upload(List<FileItem> list) {
-        UploadUtil.handleUpload(list, this.uploadFolder);
+        FileInfo fileInfo = UploadUtil.initFileInfo(list);
+
+        if (fileInfo.getTotalChunks() == 1) {
+            UploadUtil.receiveSingleFile(fileInfo, uploadFolder);
+        } else {
+            UploadUtil.receiveChunkFile(fileInfo, tmpUploadFolder);
+        }
+    }
+
+    @Override
+    public void merge(String filename, String identifier) {
+        UploadUtil.mergeChunks(filename, identifier, uploadFolder, tmpUploadFolder);
     }
 }

@@ -78,5 +78,16 @@ public class UploaderController extends BaseController {
         return ajaxDoneSuccess();
     }
 
+    @ResponseBody
+    @RequestMapping(value = "chunkMerge")
+    public ResultDTO chunkMerge (String filename, String identifier) {
+        LOGGER.info("current task: chunkMerge");
+        LOGGER.info("filename:{}, identifier:{}", filename, identifier);
+
+        uploadService.merge(filename,identifier);
+//        response.setStatus(ControllerConstants.CHUNK_NOT_UPLOADED_CODE_301);
+        return ajaxDoneSuccess();
+    }
+
 
 }

@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface UploadService {
     void upload(List<FileItem> list);
+
+    void merge(String filename, String identifier);
 }

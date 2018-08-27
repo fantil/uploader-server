@@ -1,6 +1,7 @@
 package org.fanti.uploader.server.bean;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import org.apache.commons.fileupload.FileItem;
 
 import java.io.File;
 import java.sql.Timestamp;
@@ -33,6 +34,8 @@ public class FileInfo {
 
     @JSONField(serialize = false)
     private File file;
+
+    private FileItem fileItem;
 
     public int getChunkNumber() {
         return chunkNumber;
@@ -112,5 +115,13 @@ public class FileInfo {
 
     public void setFile(File file) {
         this.file = file;
+    }
+
+    public FileItem getFileItem() {
+        return fileItem;
+    }
+
+    public void setFileItem(FileItem fileItem) {
+        this.fileItem = fileItem;
     }
 }
