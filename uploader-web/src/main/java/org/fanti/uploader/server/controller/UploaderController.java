@@ -3,6 +3,7 @@ package org.fanti.uploader.server.controller;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.fanti.uploader.server.constant.ControllerConstants;
 import org.fanti.uploader.server.controller.base.BaseController;
 import org.fanti.uploader.server.dto.ResultDTO;
 import org.fanti.uploader.server.service.upload.UploadService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -64,6 +66,15 @@ public class UploaderController extends BaseController {
         LOGGER.info("time expired:{}ms", (System.currentTimeMillis() - start));
         LOGGER.info("----------------- end upload -------------------");
 
+        return ajaxDoneSuccess();
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "chunkCheck")
+    public ResultDTO chunkCheck (HttpServletRequest request, HttpServletResponse response) {
+        LOGGER.info("current task: chunkCheck");
+
+        response.setStatus(ControllerConstants.CHUNK_NOT_UPLOADED_CODE_301);
         return ajaxDoneSuccess();
     }
 

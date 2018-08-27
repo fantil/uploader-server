@@ -26,4 +26,9 @@ public class ControllerConstants {
      * HTTP成功-200
      */
     public static final String HTTP_SUCCESS_CODE_200 = "200";
+
+    /**
+     * 分片未上传
+     */
+    public static final int CHUNK_NOT_UPLOADED_CODE_301 = 301;
 }
