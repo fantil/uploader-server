@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -41,7 +42,34 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
-    public void merge(String filename, String identifier) {
-        UploadUtil.mergeChunks(filename, identifier, uploadFolder, tmpUploadFolder);
+    public void chunkMerge(FileInfo fileInfo) {
+        UploadUtil.mergeChunks(fileInfo, uploadFolder, tmpUploadFolder);
+    }
+
+    @Override
+    public boolean chunkCheck(FileInfo fileInfo) {
+        String targetDir = "";
+        String filename = "";
+        long fileSize;
+
+        if(fileInfo.getTotalChunks() == 1) {
+            targetDir = uploadFolder;
+            filename = fileInfo.getFilename();
+            fileSize = fileInfo.getTotalSize();
+        } else {
+            targetDir = tmpUploadFolder;
+            filename = fileInfo.getChunkNumber() + "";
+            fileSize = fileInfo.getCurrentChunkSize();
+        }
+
+        String filePath = targetDir + File.separator + filename;
+        LOGGER.info("filePath:{}", filePath);
+        File file = new File(filePath);
+
+        if (file.isFile() && file.length() == fileSize) {
+            return true;
+        }
+
+        return false;
     }
 }

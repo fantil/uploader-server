@@ -120,10 +120,13 @@ public class UploadUtil {
             int len = 0;
             byte[] buffer = new byte[1024];
 
-            File file = new File(targetDir + "\\" + filename);;
+            File file = new File(targetDir + "\\" + filename);
             file.deleteOnExit();
 
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                LOGGER.info("文件创建失败, filename:{}", filename);
+                return;
+            }
 
             FileOutputStream out = new FileOutputStream(file);  //向upload目录中写入文件
             while ((len = in.read(buffer)) > 0 ) {
@@ -163,10 +166,13 @@ public class UploadUtil {
             dirFile.mkdirs();
 
             //创建目标文件
-            File file = new File(targetDir + File.separator + filename);;
+            File file = new File(targetDir + File.separator + filename);
             file.deleteOnExit();
 
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                LOGGER.info("文件创建失败, filename:{}", filename);
+                return;
+            }
 
             //接收文件数据
             FileOutputStream out = new FileOutputStream(file);
@@ -184,9 +190,9 @@ public class UploadUtil {
     }
 
 
-    public static void mergeChunks(String filename, String identifier, String targetDir, String tmpDir) {
-        String targetFilePath = targetDir + File.separator + filename;
-        String chunkPath = tmpDir + File.separator + identifier;
+    public static void mergeChunks(FileInfo fileInfo, String targetDir, String tmpDir) {
+        String targetFilePath = targetDir + File.separator + fileInfo.getFilename();
+        String chunkPath = tmpDir + File.separator + fileInfo.getIdentifier();
         File targetFile = new File(targetFilePath);
         File chunkDir = new File(chunkPath);
 
@@ -196,7 +202,11 @@ public class UploadUtil {
             }
 
             targetFile.deleteOnExit();
-            targetFile.createNewFile();
+
+            if (!targetFile.createNewFile()) {
+                LOGGER.info("文件创建失败, filename:{}", targetFile);
+                return;
+            }
 
             File[] chunks = chunkDir.listFiles(new FileFilter() {
                 @Override
@@ -208,7 +218,17 @@ public class UploadUtil {
                 };
             });
 
-            Lock lock = FileLockUtil.getLock(identifier);
+            if (chunks == null) {
+                LOGGER.error("未取得分片信息");
+                return;
+            }
+
+            if (fileInfo.getTotalChunks() != chunks.length) {
+                LOGGER.error("分片数目不匹配,应有的分片数目:{}, 实际分片数目:{}", fileInfo.getTotalChunks(), chunks.length);
+                return;
+            }
+
+            Lock lock = FileLockUtil.getLock(fileInfo.getIdentifier());
             lock.lock();
 
             List<File> files = new ArrayList<File>(Arrays.asList(chunks));
@@ -218,7 +238,7 @@ public class UploadUtil {
             Collections.sort(files, new Comparator<File>() {
                 @Override
                 public int compare(File o1, File o2) {
-                    if(Integer.valueOf(o1.getName()) < Integer.valueOf(o2.getName())){
+                    if (Integer.valueOf(o1.getName()) < Integer.valueOf(o2.getName())) {
                         return -1;
                     }
                     return 1;
@@ -229,16 +249,18 @@ public class UploadUtil {
 
             //合并
             FileChannel inChannel;
-            for(File file : files){
+            for (File file : files) {
                 inChannel = new FileInputStream(file).getChannel();
                 inChannel.transferTo(0, inChannel.size(), outChannel);
                 inChannel.close();
                 //删除分片
-                if(!file.delete()){
-                    LOGGER.error("分片[" + identifier + "=>" + file.getName() + "]删除失败");
+                if (!file.delete()) {
+                    LOGGER.error("分片[" + fileInfo.getIdentifier() + "=>" + file.getName() + "]删除失败");
                 }
             }
             outChannel.close();
+
+            chunkDir.delete();
 
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);

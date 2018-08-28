@@ -1,8 +1,10 @@
 package org.fanti.uploader.server.controller;
 
+import com.alibaba.fastjson.JSON;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.fanti.uploader.server.bean.FileInfo;
 import org.fanti.uploader.server.constant.ControllerConstants;
 import org.fanti.uploader.server.controller.base.BaseController;
 import org.fanti.uploader.server.dto.ResultDTO;
@@ -71,20 +73,27 @@ public class UploaderController extends BaseController {
 
     @ResponseBody
     @RequestMapping(value = "chunkCheck")
-    public ResultDTO chunkCheck (HttpServletRequest request, HttpServletResponse response) {
+    public ResultDTO chunkCheck (FileInfo fileInfo, HttpServletResponse response) {
         LOGGER.info("current task: chunkCheck");
+        LOGGER.info("fileInfo:{}", JSON.toJSONString(fileInfo, true));
 
+        if (uploadService.chunkCheck(fileInfo)) {
+            return ajaxDoneSuccess("当前分片(文件)已存在,无需重复上传");
+        }
+
+        LOGGER.info("chunk not found");
         response.setStatus(ControllerConstants.CHUNK_NOT_UPLOADED_CODE_301);
-        return ajaxDoneSuccess();
+        return ajaxDoneSuccess("当前分片(文件)不存在,需要上传");
     }
 
     @ResponseBody
     @RequestMapping(value = "chunkMerge")
-    public ResultDTO chunkMerge (String filename, String identifier) {
+    public ResultDTO chunkMerge (FileInfo fileInfo) {
         LOGGER.info("current task: chunkMerge");
-        LOGGER.info("filename:{}, identifier:{}", filename, identifier);
+        LOGGER.info("filename:{}, identifier:{}, totalChunks:{}",
+                fileInfo.getFilename(), fileInfo.getIdentifier(), fileInfo.getTotalChunks());
 
-        uploadService.merge(filename,identifier);
+//        uploadService.chunkMerge(filename, identifier, totalChunks);
 //        response.setStatus(ControllerConstants.CHUNK_NOT_UPLOADED_CODE_301);
         return ajaxDoneSuccess();
     }
