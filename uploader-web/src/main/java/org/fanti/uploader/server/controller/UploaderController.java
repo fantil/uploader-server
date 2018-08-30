@@ -30,7 +30,7 @@ import java.util.List;
  */
 
 @Controller
-@RequestMapping("/")
+@RequestMapping("/upload")
 public class UploaderController extends BaseController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UploaderController.class);
@@ -72,7 +72,7 @@ public class UploaderController extends BaseController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "chunkCheck")
+    @RequestMapping(value = "/chunkCheck")
     public ResultDTO chunkCheck (FileInfo fileInfo, HttpServletResponse response) {
         LOGGER.info("current task: chunkCheck");
         LOGGER.info("fileInfo:{}", JSON.toJSONString(fileInfo, true));
@@ -87,7 +87,7 @@ public class UploaderController extends BaseController {
     }
 
     @ResponseBody
-    @RequestMapping(value = "chunkMerge")
+    @RequestMapping(value = "/chunkMerge")
     public ResultDTO chunkMerge (FileInfo fileInfo) {
         LOGGER.info("current task: chunkMerge");
         LOGGER.info("filename:{}, identifier:{}, totalChunks:{}",
