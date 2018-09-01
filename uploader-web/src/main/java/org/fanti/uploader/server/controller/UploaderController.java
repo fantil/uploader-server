@@ -42,7 +42,7 @@ public class UploaderController extends BaseController {
     private String uploadFolder;
 
     @ResponseBody
-    @RequestMapping(value = "upload", method = RequestMethod.POST)
+    @RequestMapping(value = "/file", method = RequestMethod.POST)
     public ResultDTO upload (HttpServletRequest request) {
         long start = System.currentTimeMillis();
         LOGGER.info("----------------- start upload -------------------");
