@@ -242,7 +242,6 @@ public class UploadUtil {
         File chunkDir = new File(chunkPath);
 
         try {
-
             List<File> files = UploadUtil.checkChunkNum(fileInfo, tmpDir);
             if (files == null) {
                 return;
@@ -250,9 +249,6 @@ public class UploadUtil {
 
             Lock lock = FileLockUtil.getLock(fileInfo.getIdentifier());
             lock.lock();
-
-            List<File> files = new ArrayList<File>(Arrays.asList(chunks));
-
 
             //按照名称排序文件，这里分片都是按照数字命名的
             Collections.sort(files, new Comparator<File>() {
