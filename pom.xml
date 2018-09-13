@@ -45,7 +45,7 @@
         <mapper.version>3.4.0</mapper.version>
         <pagehelper.version>5.0.3</pagehelper.version>
         <orderby.helper.version>0.0.2</orderby.helper.version>
-        <mysql.version>5.1.35</mysql.version>
+        <mysql.version>8.0.12</mysql.version>
         <mybatis.spring.version>1.3.1</mybatis.spring.version>
         <jdk.version>1.7</jdk.version>
     </properties>
