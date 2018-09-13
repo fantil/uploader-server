@@ -10,7 +10,7 @@ import java.sql.Timestamp;
  * @date 2018/9/13
  */
 
-@Table
+@Table(name = "user")
 public class User {
     @Id
     @Column(name = "id")

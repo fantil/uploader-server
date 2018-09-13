@@ -189,8 +189,111 @@ public class UploadUtil {
         }
     }
 
+    /**
+     * 检查文件分片数目
+     * @param fileInfo 文件信息
+     * @param tmpDir 分片临时存放目录
+     * @return 分片数目是否完整
+     */
+    public static List<File> checkChunkNum(FileInfo fileInfo,  String tmpDir) {
+        if (fileInfo == null || StringUtil.isNullString(tmpDir)) {
+            return null;
+        }
 
+        String chunkPath = tmpDir + File.separator + fileInfo.getIdentifier();
+        File chunkDir = new File(chunkPath);
+
+
+        if (!chunkDir.exists() || !chunkDir.isDirectory()) {
+            LOGGER.error("分片目录不存在");
+            return null;
+        }
+
+        File[] chunks = chunkDir.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return !file.isDirectory();
+            }
+        });
+
+        if (chunks == null) {
+            LOGGER.error("未取得分片信息");
+            return null;
+        }
+
+        if (fileInfo.getTotalChunks() != chunks.length) {
+            LOGGER.error("分片数目不匹配,应有的分片数目:{}, 实际分片数目:{}", fileInfo.getTotalChunks(), chunks.length);
+            return null;
+        }
+
+        return Arrays.asList(chunks);
+    }
+
+    /**
+     * 合并文件分片
+     * @param fileInfo
+     * @param targetDir
+     * @param tmpDir
+     */
     public static void mergeChunks(FileInfo fileInfo, String targetDir, String tmpDir) {
+        String targetFilePath = targetDir + File.separator + fileInfo.getFilename();
+        String chunkPath = tmpDir + File.separator + fileInfo.getIdentifier();
+        File targetFile = new File(targetFilePath);
+        File chunkDir = new File(chunkPath);
+
+        try {
+
+            List<File> files = UploadUtil.checkChunkNum(fileInfo, tmpDir);
+            if (files == null) {
+                return;
+            }
+
+            Lock lock = FileLockUtil.getLock(fileInfo.getIdentifier());
+            lock.lock();
+
+            List<File> files = new ArrayList<File>(Arrays.asList(chunks));
+
+
+            //按照名称排序文件，这里分片都是按照数字命名的
+            Collections.sort(files, new Comparator<File>() {
+                @Override
+                public int compare(File o1, File o2) {
+                    if (Integer.valueOf(o1.getName()) < Integer.valueOf(o2.getName())) {
+                        return -1;
+                    }
+                    return 1;
+                }
+            });
+
+            FileChannel outChannel = new FileOutputStream(targetFile).getChannel();
+
+            //合并
+            FileChannel inChannel;
+            for (File file : files) {
+                inChannel = new FileInputStream(file).getChannel();
+                inChannel.transferTo(0, inChannel.size(), outChannel);
+                inChannel.close();
+                //删除分片
+                if (!file.delete()) {
+                    LOGGER.error("分片[" + fileInfo.getIdentifier() + "=>" + file.getName() + "]删除失败");
+                }
+            }
+            outChannel.close();
+
+            chunkDir.delete();
+
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 合并文件分片
+     * @param fileInfo
+     * @param targetDir
+     * @param tmpDir
+     */
+    public static void mergeChunksBackup(FileInfo fileInfo, String targetDir, String tmpDir) {
         String targetFilePath = targetDir + File.separator + fileInfo.getFilename();
         String chunkPath = tmpDir + File.separator + fileInfo.getIdentifier();
         File targetFile = new File(targetFilePath);

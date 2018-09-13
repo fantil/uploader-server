@@ -90,10 +90,10 @@ public class UploaderController extends BaseController {
     @RequestMapping(value = "/chunkMerge")
     public ResultDTO chunkMerge (FileInfo fileInfo) {
         LOGGER.info("current task: chunkMerge");
-        LOGGER.info("filename:{}, identifier:{}, totalChunks:{}",
-                fileInfo.getFilename(), fileInfo.getIdentifier(), fileInfo.getTotalChunks());
+        LOGGER.info("filename:{}, identifier:{}, totalChunks:{}, currentDir:{}",
+                fileInfo.getFilename(), fileInfo.getIdentifier(), fileInfo.getTotalChunks(), fileInfo.getCurrentDir());
 
-//        uploadService.chunkMerge(filename, identifier, totalChunks);
+        uploadService.chunkMerge(fileInfo);
 //        response.setStatus(ControllerConstants.CHUNK_NOT_UPLOADED_CODE_301);
         return ajaxDoneSuccess();
     }

@@ -30,7 +30,7 @@ public class FileInfo {
 
     private String relativePath;
 
-    private Timestamp uploadTime;
+    private String currentDir;
 
     @JSONField(serialize = false)
     private File file;
@@ -101,12 +101,12 @@ public class FileInfo {
         this.relativePath = relativePath;
     }
 
-    public Timestamp getUploadTime() {
-        return uploadTime;
+    public String getCurrentDir() {
+        return currentDir;
     }
 
-    public void setUploadTime(Timestamp uploadTime) {
-        this.uploadTime = uploadTime;
+    public void setCurrentDir(String currentDir) {
+        this.currentDir = currentDir;
     }
 
     public File getFile() {
