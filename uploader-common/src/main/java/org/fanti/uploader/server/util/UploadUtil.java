@@ -250,15 +250,17 @@ public class UploadUtil {
         fileInfo.setRealPath(realPath);
         File targetFile = new File(realPath);
 
-
+        Lock lock = null;
         try {
+            LOGGER.error("-----------targetFile.exists()------------");
             if (!targetFile.exists()) {
                 targetFile.createNewFile();
             }
+            LOGGER.error("-----------targetFile.exists()------------");
 
-            Lock lock = FileLockUtil.getLock(fileInfo.getIdentifier());
+            lock = FileLockUtil.getLock(fileInfo.getIdentifier());
             lock.lock();
-
+            LOGGER.error("-----------lock------------");
             //按照名称排序文件，这里分片都是按照数字命名的
             Collections.sort(files, new Comparator<File>() {
                 @Override
@@ -270,6 +272,7 @@ public class UploadUtil {
                 }
             });
 
+            LOGGER.error("-----------FileOutputStream------------");
             FileChannel outChannel = new FileOutputStream(targetFile).getChannel();
 
             //合并
@@ -284,14 +287,18 @@ public class UploadUtil {
                 }
             }
             outChannel.close();
-
+            LOGGER.error("-----------deleteOnExit------------");
             chunkDir.deleteOnExit();
-
+            LOGGER.error("-----------deleteOnExit------------");
 
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             chunkDir.deleteOnExit();
             targetFile.deleteOnExit();
+        } finally {
+            if (lock != null) {
+                lock.unlock();
+            }
         }
 
         fileInfo.setFile(targetFile);

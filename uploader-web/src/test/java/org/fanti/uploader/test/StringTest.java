@@ -73,23 +73,14 @@ public class StringTest {
 
     @Test
     public void splitTest4() {
-//        String id = "/abc/123/456/txt";
-//        String fullId = "/abc/123/456/txt/fsdf/gsrdg/gsrdgf";
-//
-//        String info = fullId.split(id)[1].split("/")[1];
-//
-//        LOGGER.info("info:{}", JSON.toJSONString(info));
-//        LOGGER.info("info:{}", JSON.toJSONString(fullId.split(id)[1]));
-//        LOGGER.info("info:{}", JSON.toJSONString(fullId.split(id)[1].split("/")));
+//        String fullPath = "/fweffw/fwesf/fwesdc/wefawces/wes";
+//        String fullPath = "\\fweffw\\fwesf\\fwesdc\\wefawces\\wes";
+//        String fullPath = "\\fweffw";
+//        String fullPath = "\\";
+        String fullPath = "fwef";
+        String dirName = fullPath.substring(fullPath.lastIndexOf(File.separator) + 1);
 
-        String fullPath = "\\ttt";
-        String currentPath = "\\";
-//        String dirName = StringUtil.splitByFileSeparator(fullPath.split(currentPath)[1])[1];
-
-        LOGGER.info("info:{}", JSON.toJSONString(fullPath.substring(currentPath.length())));
-//        LOGGER.info("info:{}", JSON.toJSONString(fullPath.substring(currentPath.length())[0]));
-        LOGGER.info("info:{}", JSON.toJSONString(StringUtil.splitByFileSeparator(fullPath.substring(currentPath.length()))));
-//        LOGGER.info("info:{}", JSON.toJSONString(StringUtil.splitByFileSeparator(fullPath.split(currentPath)[1])[1]));
+        LOGGER.info("dirName:{}", dirName);
     }
 
     @Test

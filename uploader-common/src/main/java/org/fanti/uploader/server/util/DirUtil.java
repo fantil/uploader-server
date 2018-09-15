@@ -84,7 +84,6 @@ public class DirUtil {
         List<String> pathList = new ArrayList<>();
         pathList.add(File.separator);
         LOGGER.info("fullRelativePath:{}", fullRelativePath);
-        LOGGER.info("File.separator:{}", File.separator);
         if (!File.separator.equals(fullRelativePath)) {
             String[] dirArray = StringUtil.splitByFileSeparator(fullRelativePath);
             String parentDir = File.separator;
@@ -101,6 +100,7 @@ public class DirUtil {
                 }
             }
         }
+        LOGGER.info("pathList:{}", JSON.toJSONString(pathList));
 
         String nonExistsPath = "";
         int parentId = -1;
@@ -117,10 +117,12 @@ public class DirUtil {
                 }
                 if (!flag) {
                     nonExistsPath = path;
+                    break;
                 }
             }
         }
 
+        LOGGER.info("nonExistsPath:{}", nonExistsPath);
 
         UserDir dir = new UserDir();
 
@@ -139,8 +141,10 @@ public class DirUtil {
      * @return 目录名,前后无File.separator
      */
     public static String initDirName(String fullPath) {
-        String dirName = fullPath.substring(fullPath.lastIndexOf(File.separator));
-        return dirName;
+        if (StringUtil.isNullString(fullPath)) {
+            return "";
+        }
+        return fullPath.substring(fullPath.lastIndexOf(File.separator) + 1);
     }
 
 
