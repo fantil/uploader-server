@@ -3,11 +3,13 @@ package org.fanti.uploader.server.util;
 import com.alibaba.fastjson.JSON;
 import org.apache.commons.fileupload.FileItem;
 import org.fanti.uploader.server.bean.FileInfo;
+import org.fanti.uploader.server.db.DBFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 
@@ -50,11 +52,6 @@ public class UploadUtil {
 
         fileInfo.setFileItem(fileContent);
 
-//        if (fileContent != null) {
-//            initFileContent(fileInfo, fileContent, uploadFolder);
-//        }
-
-//        LOGGER.info("fileInfo:{}", JSON.toJSONString(fileInfo, true));
         return fileInfo;
     }
 
@@ -231,20 +228,32 @@ public class UploadUtil {
 
     /**
      * 合并文件分片
-     * @param fileInfo
-     * @param targetDir
-     * @param tmpDir
+     * @param fileInfo 文件信息
+     * @param targetDir 目标目录
+     * @param tmpDir 分片存放目录
      */
     public static void mergeChunks(FileInfo fileInfo, String targetDir, String tmpDir) {
-        String targetFilePath = targetDir + File.separator + fileInfo.getFilename();
+        List<File> files = UploadUtil.checkChunkNum(fileInfo, tmpDir);
+        if (files == null) {
+            LOGGER.error("files is null");
+            return;
+        }
+
         String chunkPath = tmpDir + File.separator + fileInfo.getIdentifier();
-        File targetFile = new File(targetFilePath);
         File chunkDir = new File(chunkPath);
 
+        String realPath = FileUtil.initRealPath(fileInfo, targetDir);
+        if (StringUtil.isNullString(realPath)) {
+            LOGGER.error("realPath is null:{}", realPath);
+            return;
+        }
+        fileInfo.setRealPath(realPath);
+        File targetFile = new File(realPath);
+
+
         try {
-            List<File> files = UploadUtil.checkChunkNum(fileInfo, tmpDir);
-            if (files == null) {
-                return;
+            if (!targetFile.exists()) {
+                targetFile.createNewFile();
             }
 
             Lock lock = FileLockUtil.getLock(fileInfo.getIdentifier());
@@ -276,138 +285,15 @@ public class UploadUtil {
             }
             outChannel.close();
 
-            chunkDir.delete();
+            chunkDir.deleteOnExit();
+
 
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 合并文件分片
-     * @param fileInfo
-     * @param targetDir
-     * @param tmpDir
-     */
-    public static void mergeChunksBackup(FileInfo fileInfo, String targetDir, String tmpDir) {
-        String targetFilePath = targetDir + File.separator + fileInfo.getFilename();
-        String chunkPath = tmpDir + File.separator + fileInfo.getIdentifier();
-        File targetFile = new File(targetFilePath);
-        File chunkDir = new File(chunkPath);
-
-        try {
-            if (!chunkDir.exists() || !chunkDir.isDirectory()) {
-                LOGGER.error("分片目录不存在");
-            }
-
+            chunkDir.deleteOnExit();
             targetFile.deleteOnExit();
-
-            if (!targetFile.createNewFile()) {
-                LOGGER.info("文件创建失败, filename:{}", targetFile);
-                return;
-            }
-
-            File[] chunks = chunkDir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    if (file.isDirectory()) {
-                        return false;
-                    }
-                    return true;
-                };
-            });
-
-            if (chunks == null) {
-                LOGGER.error("未取得分片信息");
-                return;
-            }
-
-            if (fileInfo.getTotalChunks() != chunks.length) {
-                LOGGER.error("分片数目不匹配,应有的分片数目:{}, 实际分片数目:{}", fileInfo.getTotalChunks(), chunks.length);
-                return;
-            }
-
-            Lock lock = FileLockUtil.getLock(fileInfo.getIdentifier());
-            lock.lock();
-
-            List<File> files = new ArrayList<File>(Arrays.asList(chunks));
-
-
-            //按照名称排序文件，这里分片都是按照数字命名的
-            Collections.sort(files, new Comparator<File>() {
-                @Override
-                public int compare(File o1, File o2) {
-                    if (Integer.valueOf(o1.getName()) < Integer.valueOf(o2.getName())) {
-                        return -1;
-                    }
-                    return 1;
-                }
-            });
-
-            FileChannel outChannel = new FileOutputStream(targetFile).getChannel();
-
-            //合并
-            FileChannel inChannel;
-            for (File file : files) {
-                inChannel = new FileInputStream(file).getChannel();
-                inChannel.transferTo(0, inChannel.size(), outChannel);
-                inChannel.close();
-                //删除分片
-                if (!file.delete()) {
-                    LOGGER.error("分片[" + fileInfo.getIdentifier() + "=>" + file.getName() + "]删除失败");
-                }
-            }
-            outChannel.close();
-
-            chunkDir.delete();
-
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-    }
-
-    private static FileInfo initFileContent(FileInfo fileInfo, FileItem fileContent, String uploadFolder) {
-        try {
-            //得到上传输入项
-            String filename = fileContent.getName();  //得到上传文件名
-            LOGGER.info("filename:{}", filename);
-            filename = filename.substring(filename.lastIndexOf("\\") + 1 );
-            InputStream in = fileContent.getInputStream();   //得到上传数据
-            int len = 0;
-            byte[] buffer = new byte[1024];
-
-            File file = null;
-            if (fileInfo.getTotalChunks() > 1) {
-                if (fileInfo.getChunkNumber() > 0) {
-                    file = new File(uploadFolder + "\\" + filename + ".part" + fileInfo.getChunkNumber());
-                } else {
-                    LOGGER.error("文件分片编号有误,请检查分片信息:{}", JSON.toJSONString(fileInfo));
-                }
-            } else {
-                file = new File(uploadFolder + "\\" + filename);
-            }
-            if (!file.exists()) {
-                file.createNewFile();
-            } else {
-//                file.deleteOnExit();
-                LOGGER.error("当前文件夹中已存在同名文件。");
-                fileInfo.setFile(file);
-            }
-
-            FileOutputStream out = new FileOutputStream(file);  //向upload目录中写入文件
-            while ((len = in.read(buffer)) > 0 ) {
-                out.write(buffer, 0, len);
-            }
-
-            in.close();
-            out.close();
-
-            fileInfo.setFile(file);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
         }
 
-
-        return fileInfo;
+        fileInfo.setFile(targetFile);
     }
 }

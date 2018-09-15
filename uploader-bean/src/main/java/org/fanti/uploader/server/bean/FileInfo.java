@@ -14,27 +14,70 @@ import java.sql.Timestamp;
  */
 
 public class FileInfo {
+    /**
+     * 当前分片编号
+     */
     private int chunkNumber;
 
+    /**
+     * 总分片数目
+     */
     private int totalChunks;
 
+    /**
+     * 当前分片大小
+     */
     private long currentChunkSize;
 
+    /**
+     * 单个文件分片大小
+     */
     private long chunkSize;
 
+    /**
+     * 文件总大小
+     */
     private long totalSize;
 
+    /**
+     * 文件标识符,目前为文件的md5值
+     */
     private String identifier;
 
+    /**
+     * 文件名
+     */
     private String filename;
 
+    /**
+     * 文件相对路径,当上传单个文件时为"/",当上传文件夹时，为相对于文件夹的路径
+     */
     private String relativePath;
 
+    /**
+     * 文件上传时，用户所处的目录
+     */
     private String currentDir;
 
+    /**
+     * 文件完整的相对路径
+     */
+    private String fullRelativePath;
+
+    /**
+     * 文件在硬盘中实际存放的目录
+     */
+    private String realPath;
+
+    /**
+     * 实际文件对象
+     */
     @JSONField(serialize = false)
     private File file;
 
+    /**
+     * 文件相关字段项
+     */
     private FileItem fileItem;
 
     public int getChunkNumber() {
@@ -99,6 +142,22 @@ public class FileInfo {
 
     public void setRelativePath(String relativePath) {
         this.relativePath = relativePath;
+    }
+
+    public String getFullRelativePath() {
+        return fullRelativePath;
+    }
+
+    public void setFullRelativePath(String fullRelativePath) {
+        this.fullRelativePath = fullRelativePath;
+    }
+
+    public String getRealPath() {
+        return realPath;
+    }
+
+    public void setRealPath(String realPath) {
+        this.realPath = realPath;
     }
 
     public String getCurrentDir() {

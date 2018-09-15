@@ -1,5 +1,6 @@
 package org.fanti.uploader.server.util;
 
+import java.io.File;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +14,19 @@ import java.util.regex.Pattern;
 public class StringUtil {
 
     private StringUtil() {
+    }
+
+    /**
+     * 根据文件分隔符来拆分字符串
+     * @param str 需要拆分的字符串
+     * @return 拆分后的字符串
+     */
+    public static String[] splitByFileSeparator(String str) {
+        if ("\\".equals(File.separator)) {
+            return str.split("\\\\");
+        } else {
+            return str.split("/");
+        }
     }
 
     /**

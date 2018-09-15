@@ -23,6 +23,8 @@ public class UserDir {
 
     private String dirName;
 
+    private String fullPath;
+
     private Timestamp createTime;
 
     private Timestamp modifyTime;
@@ -57,6 +59,14 @@ public class UserDir {
 
     public void setDirName(String dirName) {
         this.dirName = dirName;
+    }
+
+    public String getFullPath() {
+        return fullPath;
+    }
+
+    public void setFullPath(String fullPath) {
+        this.fullPath = fullPath;
     }
 
     public Timestamp getCreateTime() {

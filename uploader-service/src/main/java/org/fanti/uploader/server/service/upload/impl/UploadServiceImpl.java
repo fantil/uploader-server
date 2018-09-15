@@ -1,11 +1,21 @@
 package org.fanti.uploader.server.service.upload.impl;
 
+import com.alibaba.fastjson.JSON;
 import org.apache.commons.fileupload.FileItem;
 import org.fanti.uploader.server.bean.FileInfo;
+import org.fanti.uploader.server.db.DBFile;
+import org.fanti.uploader.server.db.User;
+import org.fanti.uploader.server.db.UserDir;
+import org.fanti.uploader.server.db.UserFile;
+import org.fanti.uploader.server.mapper.DBFileMapper;
+import org.fanti.uploader.server.mapper.UserDirMapper;
+import org.fanti.uploader.server.mapper.UserFileMapper;
+import org.fanti.uploader.server.service.dir.UserDirService;
 import org.fanti.uploader.server.service.upload.UploadService;
-import org.fanti.uploader.server.util.UploadUtil;
+import org.fanti.uploader.server.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +33,18 @@ import java.util.List;
 public class UploadServiceImpl implements UploadService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UploadServiceImpl.class);
+
+    @Autowired
+    DBFileMapper dbFileMapper;
+
+    @Autowired
+    UserDirMapper userDirMapper;
+
+    @Autowired
+    UserFileMapper userFileMapper;
+
+    @Autowired
+    UserDirService userDirService;
 
     @Value("${upload.folder}")
     private String uploadFolder;
@@ -44,8 +66,35 @@ public class UploadServiceImpl implements UploadService {
     @Override
     public void chunkMerge(FileInfo fileInfo) {
         UploadUtil.mergeChunks(fileInfo, uploadFolder, tmpUploadFolder);
+
+        if (fileInfo == null || fileInfo.getFile() == null) {
+            LOGGER.error("fileInfo or fileInfo.getFile is null");
+            return;
+        }
+        User user = UserUtil.getCurrentUser();
+
+        DBFile dbFile = FileUtil.initDBFile(fileInfo);
+        dbFileMapper.insert(dbFile);
+        List<DBFile> dbFileList = dbFileMapper.getDBFileList(dbFile.getMd5());
+
+        if (dbFileList.size() == 0) {
+            LOGGER.error("insert userDir failed");
+            return ;
+        }
+        LOGGER.info("dbFileList:{}", JSON.toJSONString(dbFileList));
+        int fileId = dbFileList.get(0).getId();
+
+        UserDir dir = userDirService.initUserDir(fileInfo);
+
+        UserFile userFile = UserFileUtil.initUserFile(user.getId(), fileId, dir.getId());
+        userFileMapper.insert(userFile);
     }
 
+    /**
+     * 检查文件分片数目
+     * @param fileInfo 文件信息
+     * @return 分片数目是否为1
+     */
     @Override
     public boolean chunkCheck(FileInfo fileInfo) {
         String targetDir = "";
@@ -53,11 +102,12 @@ public class UploadServiceImpl implements UploadService {
         long fileSize;
 
         if(fileInfo.getTotalChunks() == 1) {
+            //TODO
             targetDir = uploadFolder;
             filename = fileInfo.getFilename();
             fileSize = fileInfo.getTotalSize();
         } else {
-            targetDir = tmpUploadFolder;
+            targetDir = tmpUploadFolder + File.separator + fileInfo.getIdentifier();
             filename = fileInfo.getChunkNumber() + "";
             fileSize = fileInfo.getCurrentChunkSize();
         }

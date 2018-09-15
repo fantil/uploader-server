@@ -19,7 +19,7 @@ public class DBFile {
 
     private String name;
 
-    private String length;
+    private long length;
 
     private String md5;
 
@@ -47,11 +47,11 @@ public class DBFile {
         this.name = name;
     }
 
-    public String getLength() {
+    public long getLength() {
         return length;
     }
 
-    public void setLength(String length) {
+    public void setLength(long length) {
         this.length = length;
     }
 

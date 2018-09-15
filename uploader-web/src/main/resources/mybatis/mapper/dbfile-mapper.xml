@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.fanti.uploader.server.mapper.DBFileMapper">
-
-
-
+    <select id="getDBFileList" resultType="org.fanti.uploader.server.db.DBFile">
+        SELECT
+            f.id id,
+            f.name name,
+            f.length length,
+            f.md5 md5,
+            f.real_path realPath,
+            f.ext ext,
+            f.first_upload_time firstUploadTime,
+            f.first_upload_user_id firstUploadUserId
+        FROM
+            file f
+        WHERE
+            f.md5=#{md5}
+    </select>
 </mapper>

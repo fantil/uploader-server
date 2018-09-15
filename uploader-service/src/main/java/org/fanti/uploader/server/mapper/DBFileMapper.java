@@ -1,6 +1,8 @@
 package org.fanti.uploader.server.mapper;
 
+import org.apache.ibatis.annotations.Param;
 import org.fanti.uploader.server.db.DBFile;
+import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.common.Mapper;
 
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.List;
  * @date 2018/9/13
  */
 
+@Service
 public interface DBFileMapper extends Mapper<DBFile> {
-    List<DBFile> getDBFileList();
+    List<DBFile> getDBFileList(@Param("md5") String md5);
 }
