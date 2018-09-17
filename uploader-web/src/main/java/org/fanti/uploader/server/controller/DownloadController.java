@@ -5,10 +5,12 @@ import org.fanti.uploader.server.bean.FileInfo;
 import org.fanti.uploader.server.constant.BasicConstants;
 import org.fanti.uploader.server.constant.ControllerConstants;
 import org.fanti.uploader.server.controller.base.BaseController;
+import org.fanti.uploader.server.db.DBFile;
 import org.fanti.uploader.server.dto.FileDTO;
 import org.fanti.uploader.server.dto.ResultDTO;
 import org.fanti.uploader.server.service.download.DownloadService;
 import org.fanti.uploader.server.service.upload.UploadService;
+import org.fanti.uploader.server.util.DirUtil;
 import org.fanti.uploader.server.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,37 +83,25 @@ public class DownloadController extends BaseController {
 
     @ResponseBody
     @RequestMapping(value = "/listFiles")
-    public ResultDTO listFiles () {
-        File rootDir = new File(uploadFolder);
-        //如果file代表的不是一个文件，而是一个目录
-        if (rootDir.isDirectory()) {
-            //列出该目录下的所有文件和目录
-            List<FileDTO> fileList = new ArrayList<>();
-            File[] files = rootDir.listFiles();
-            if (files == null || files.length == 0) {
-                return ajaxDoneSuccess();
-            }
-            //遍历files[]数组
-            for (File file : files) {
-                if (file == null) {
-                    continue;
-                }
+    public ResultDTO listFiles (String currentDir) {
+        currentDir = DirUtil.replaceFileSeparator(currentDir);
+        List<DBFile> dbFileList = downloadService.listFiles(currentDir);
+        List<FileDTO> fileList = new ArrayList<>();
 
-                FileDTO fileDTO = new FileDTO();
-                fileDTO.setName(file.getName());
-                if (file.isDirectory()) {
-                    fileDTO.setType(BasicConstants.FILE_TYPE_IS_DIR);
-                } else {
-                    fileDTO.setType(BasicConstants.FILE_TYPE_IS_FILE);
-                }
-
-                fileList.add(fileDTO);
-            }
+        if (dbFileList == null || dbFileList.size() == 0) {
             return ajaxDoneSuccess(fileList);
         }
 
-        return ajaxDoneFail("当前目录不存在!");
+        for (DBFile dbFile : dbFileList) {
+            FileDTO fileDTO = new FileDTO();
+            fileDTO.setId(dbFile.getId() + "");
+            fileDTO.setType(BasicConstants.FILE_TYPE_IS_FILE);
+            fileDTO.setName(dbFile.getName());
+            fileDTO.setPath(dbFile.getRealPath());
+
+            fileList.add(fileDTO);
+        }
+
+        return ajaxDoneSuccess(fileList);
     }
-
-
 }

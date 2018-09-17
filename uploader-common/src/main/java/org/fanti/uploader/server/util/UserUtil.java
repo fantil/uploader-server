@@ -18,4 +18,9 @@ public class UserUtil {
 
         return user;
     }
+
+
+    public static int getCurrentUserId() {
+        return getCurrentUser().getId();
+    }
 }

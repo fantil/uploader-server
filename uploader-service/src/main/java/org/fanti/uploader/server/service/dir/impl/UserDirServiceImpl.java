@@ -7,6 +7,7 @@ import org.fanti.uploader.server.db.UserDir;
 import org.fanti.uploader.server.mapper.DBFileMapper;
 import org.fanti.uploader.server.mapper.UserDirMapper;
 import org.fanti.uploader.server.mapper.UserFileMapper;
+import org.fanti.uploader.server.mapper.base.BaseMapperService;
 import org.fanti.uploader.server.service.dir.UserDirService;
 import org.fanti.uploader.server.util.DirUtil;
 import org.fanti.uploader.server.util.StringUtil;
@@ -26,7 +27,7 @@ import java.util.List;
  */
 
 @Service
-public class UserDirServiceImpl implements UserDirService {
+public class UserDirServiceImpl extends BaseMapperService<UserDir> implements UserDirService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserDirServiceImpl.class);
 
@@ -75,44 +76,48 @@ public class UserDirServiceImpl implements UserDirService {
 
         if (userDir.getFullPath().equals(fullPath)) {
             userDirMapper.insert(userDir);
-            List<UserDir> userDirList = userDirMapper.getUserDirListWithFullPath(user.getId(), userDir.getFullPath());
 
-            if (userDirList.size() == 0) {
-                LOGGER.error("insert userDir failed");
-                return null;
-            }
-            LOGGER.info("userDirList:{}", JSON.toJSONString(userDirList));
-            return userDirList.get(0);
+            return this.getUserDirByUserIdAndFullPath(user.getId(), userDir.getFullPath());
         }
 
         userDirMapper.insert(userDir);
-        List<UserDir> userDirList = userDirMapper.getUserDirListWithFullPath(user.getId(), userDir.getFullPath());
-
-        if (userDirList.size() == 0) {
-            LOGGER.error("insert userDir failed");
+        UserDir dir = getUserDirByUserIdAndFullPath(user.getId(), userDir.getFullPath());
+        if (dir == null) {
+            LOGGER.error("userDir is null");
             return null;
         }
-        LOGGER.info("userDirList:{}", JSON.toJSONString(userDirList));
-        int parentDirId = userDirList.get(0).getId();
+        int parentDirId = dir.getId();
         while (!fullPath.equals(userDir.getFullPath())) {
             userDir = DirUtil.nextUserDir(userDir, fullPath, parentDirId);
             LOGGER.info("userDir:{}", JSON.toJSONString(userDir, true));
             userDirMapper.insert(userDir);
-            userDirList = userDirMapper.getUserDirListWithFullPath(user.getId(), userDir.getFullPath());
 
-            if (userDirList.size() == 0) {
-                LOGGER.error("insert userDir failed");
+            dir = getUserDirByUserIdAndFullPath(user.getId(), userDir.getFullPath());
+            if (dir == null) {
+                LOGGER.error("userDir is null");
                 return null;
             }
-            LOGGER.info("userDirList:{}", JSON.toJSONString(userDirList));
-            parentDirId = userDirList.get(0).getId();
-            LOGGER.info("parentDirId:{}", parentDirId);
+            parentDirId = dir.getId();
         }
 
-        LOGGER.info("parentDirId:{}", parentDirId);
-        LOGGER.info("userDir:{}", JSON.toJSONString(userDir));
         userDir.setId(parentDirId);
         LOGGER.info("userDir:{}", JSON.toJSONString(userDir));
         return userDir;
+    }
+
+    @Override
+    public UserDir getUserDirByUserIdAndFullPath(int userId, String fullPath) {
+        List<UserDir> userDirList = userDirMapper.getUserDirListWithFullPath(userId, fullPath);
+
+        if (userDirList.size() == 0) {
+            LOGGER.error("can't find userDir by userId:{}, fullPath:{}", userId, fullPath);
+            return null;
+        }
+
+        if (userDirList.size() > 1) {
+            LOGGER.info("userDirList:{}", JSON.toJSONString(userDirList));
+            LOGGER.info("userDirList size > 1, please check it.");
+        }
+        return userDirList.get(0);
     }
 }

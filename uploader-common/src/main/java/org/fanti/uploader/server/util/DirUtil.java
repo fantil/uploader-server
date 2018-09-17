@@ -38,19 +38,12 @@ public class DirUtil {
         if (StringUtil.isNullString(fileInfo.getRelativePath())) {
             fileInfo.setRelativePath(File.separator);
         }
-
-        String separator = fileInfo.getRelativePath().substring(0, 1);
+        fileInfo.setRelativePath(replaceFileSeparator(fileInfo.getRelativePath()));
         LOGGER.info("RelativePath:{}", fileInfo.getRelativePath());
-        if (!File.separator.equals(separator)) {
-            fileInfo.setRelativePath(fileInfo.getRelativePath().replace(separator, File.separator));
-            LOGGER.info("RelativePath:{}", fileInfo.getRelativePath());
-        }
 
-        separator = fileInfo.getCurrentDir().substring(0, 1);
-        if (!File.separator.equals(separator)) {
-            fileInfo.setCurrentDir(fileInfo.getCurrentDir().replace(separator, File.separator));
-            LOGGER.info("RelativePath:{}", fileInfo.getRelativePath());
-        }
+        fileInfo.setCurrentDir(replaceFileSeparator(fileInfo.getCurrentDir()));
+        LOGGER.info("RelativePath:{}", fileInfo.getRelativePath());
+
         LOGGER.info("fileInfo:{}", JSON.toJSONString(fileInfo));
         String fullRelativePath = "";
 
@@ -155,10 +148,13 @@ public class DirUtil {
         String[] dirNameArray = StringUtil.splitByFileSeparator(fullPath.substring(currentPath.length()));
 
         String dirName = "";
-        if (dirNameArray.length == 1) {
-            dirName = dirNameArray[0];
-        } else {
+        if (dirNameArray.length == 0) {
+            return null;
+        }
+        if (StringUtil.isNullString(dirNameArray[0])) {
             dirName = dirNameArray[1];
+        } else {
+            dirName = dirNameArray[0];
         }
         userDir.setDirName(dirName);
         userDir.setParentId(parentId);
@@ -171,5 +167,22 @@ public class DirUtil {
         userDir.setModifyTime(new Timestamp(System.currentTimeMillis()));
 
         return userDir;
+    }
+
+    /**
+     * 替换路径中的分隔符为系统分隔符
+     * @param path 路径分隔符
+     * @return 替换后的路径
+     */
+    public static String replaceFileSeparator(String path) {
+        LOGGER.info("path:{}", path);
+        String separator = path.substring(0, 1);
+
+        if (!File.separator.equals(separator)) {
+            path = path.replace(separator, File.separator);
+            LOGGER.info("path:{}", path);
+        }
+
+        return path;
     }
 }

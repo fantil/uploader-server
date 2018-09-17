@@ -17,4 +17,6 @@ import java.util.List;
 @Service
 public interface DBFileMapper extends Mapper<DBFile> {
     List<DBFile> getDBFileList(@Param("md5") String md5);
+
+    List<DBFile> getDBFileListByFileIdList(List<Integer> fileIdList);
 }

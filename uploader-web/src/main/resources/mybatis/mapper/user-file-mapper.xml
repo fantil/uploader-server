@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.fanti.uploader.server.mapper.UserFileMapper">
-
-
-
+    <select id="getUserFileList" resultType="org.fanti.uploader.server.db.UserFile">
+        SELECT
+            f.id id,
+            f.user_id userId,
+            f.file_id fileId,
+            f.dir_id dirId,
+            f.create_time createTime,
+            f.modify_time modifyTime
+        FROM
+            user_file f
+        WHERE
+            f.dir_id=#{dirId}
+    </select>
 </mapper>

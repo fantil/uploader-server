@@ -7,7 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -84,11 +86,42 @@ public class StringTest {
     }
 
     @Test
+    public void splitTest5() {
+        String fullPath = "\\fweffw\\asd\\ghj\\bvnc\\wes";
+//        String fullPath = "\\fweffw";
+//        String currentPath = "\\";
+        String currentPath = "\\fweffw";
+
+        String[] dirNameArray = StringUtil.splitByFileSeparator(fullPath.substring(currentPath.length()));
+
+        String dirName = "";
+        if (dirNameArray.length == 1) {
+            dirName = dirNameArray[0];
+        } else {
+            dirName = dirNameArray[1];
+        }
+
+        LOGGER.info("dirNameArray:{}", JSON.toJSONString(dirNameArray));
+        LOGGER.info("dirName:{}", dirName);
+    }
+
+    @Test
     public void replaceTest() {
         String id = "/abc/123/456/txt";
 
         id = id.replace("/", "\\");
         LOGGER.info("id:{}", id);
 
+    }
+
+    @Test
+    public void dateToStringTest() {
+        long monthMillisecond = 30 * 86400 * 1000L;
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis() - monthMillisecond);
+
+        LOGGER.info("id:{}", System.currentTimeMillis());
+        LOGGER.info("id:{}", System.currentTimeMillis() - monthMillisecond);
+        LOGGER.info("id:{}", monthMillisecond);
+        LOGGER.info("id:{}", timestamp.toString());
     }
 }
