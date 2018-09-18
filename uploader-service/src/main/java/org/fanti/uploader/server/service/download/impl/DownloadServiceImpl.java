@@ -43,8 +43,12 @@ public class DownloadServiceImpl implements DownloadService {
     UserDirService userDirService;
 
     @Override
-    public void download() {
-
+    public DBFile download(int fileId) {
+        List<DBFile> dbFileList = dbFileMapper.getDBFileByFileId(fileId);
+        if (dbFileList == null || dbFileList.size() == 0) {
+            return null;
+        }
+        return dbFileList.get(0);
     }
 
     @Override

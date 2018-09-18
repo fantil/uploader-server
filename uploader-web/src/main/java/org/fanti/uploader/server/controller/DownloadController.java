@@ -54,18 +54,22 @@ public class DownloadController extends BaseController {
     @ResponseBody
     @RequestMapping(value = "/file")
     public ResultDTO download (HttpServletRequest request, HttpServletResponse response,
-                               @RequestParam(value = "fileName", required = true) String fileName) throws IOException {
-        if (StringUtil.isNullString(fileName)) {
+                               @RequestParam(value = "fileName", required = true) String fileId) throws IOException {
+        if (StringUtil.isNullString(fileId)) {
             return ajaxDoneFail("param error");
         }
 
-        LOGGER.info("filename:{}", fileName);
-        File file = new File(uploadFolder + File.separator + fileName);
+        LOGGER.info("filename:{}", fileId);
+        DBFile dbFile = downloadService.download(Integer.parseInt(fileId));
+        if (dbFile == null) {
+            return ajaxDoneFail("file not exists.");
+        }
+        File file = new File(dbFile.getRealPath());
 
 //        response.setContentType("text/html; charset=UTF-8");
 //        response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", "attachment;filename="
-                + URLEncoder.encode(fileName, "UTF-8"));
+                + URLEncoder.encode(dbFile.getName(), "UTF-8"));
         response.setHeader("Content-Length", file.length() + "");
         FileInputStream fis = new FileInputStream(file);
         OutputStream os = response.getOutputStream();

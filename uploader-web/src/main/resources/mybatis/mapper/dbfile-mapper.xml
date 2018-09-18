@@ -17,6 +17,23 @@
             f.md5=#{md5}
     </select>
 
+    <select id="getDBFileByFileId" resultType="org.fanti.uploader.server.db.DBFile">
+        SELECT
+            f.id id,
+            f.name name,
+            f.length length,
+            f.md5 md5,
+            f.real_path realPath,
+            f.ext ext,
+            f.first_upload_time firstUploadTime,
+            f.first_upload_user_id firstUploadUserId
+        FROM
+            file f
+        WHERE
+            f.id=#{fileId}
+
+    </select>
+
     <select id="getDBFileListByFileIdList" resultType="org.fanti.uploader.server.db.DBFile">
         SELECT
             f.id id,
