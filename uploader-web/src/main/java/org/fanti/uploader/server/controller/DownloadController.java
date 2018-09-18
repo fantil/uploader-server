@@ -54,7 +54,7 @@ public class DownloadController extends BaseController {
     @ResponseBody
     @RequestMapping(value = "/file")
     public ResultDTO download (HttpServletRequest request, HttpServletResponse response,
-                               @RequestParam(value = "fileName", required = true) String fileId) throws IOException {
+                               @RequestParam(value = "fileId", required = true) String fileId) throws IOException {
         if (StringUtil.isNullString(fileId)) {
             return ajaxDoneFail("param error");
         }
