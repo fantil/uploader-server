@@ -7,9 +7,9 @@ import org.fanti.uploader.server.mapper.base.IMapperService;
 import java.util.List;
 
 public interface UserDirService extends IMapperService<UserDir> {
-    UserDir initUserDir(FileInfo fileInfo);
+    int initUserDir(FileInfo fileInfo);
 
-    UserDir createUserDir(UserDir userDir, String fullPath);
+    int createUserDir(UserDir userDir, String fullPath);
 
     UserDir getUserDirByUserIdAndFullPath(int userId, String fullPath);
 }

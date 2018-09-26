@@ -17,6 +17,8 @@ import java.util.List;
 
 @Service
 public interface UserDirMapper extends Mapper<UserDir> {
+    int add(UserDir userDir);
+
     List<UserDir> getUserDirListWithFullPath(@Param("userId") int userId, @Param("fullPath") String fullPath);
 
     List<UserDir> getUserDirList(@Param("userId") int userId);

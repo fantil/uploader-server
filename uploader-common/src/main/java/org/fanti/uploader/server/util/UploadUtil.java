@@ -108,24 +108,32 @@ public class UploadUtil {
      */
     public static void receiveSingleFile(FileInfo fileInfo, String targetDir) {
         try {
+            String realPath = FileUtil.initRealPath(fileInfo, targetDir);
+            if (StringUtil.isNullString(realPath)) {
+                LOGGER.error("realPath is null:{}", realPath);
+                return;
+            }
+            fileInfo.setRealPath(realPath);
+            File targetFile = new File(realPath);
+
             FileItem fileContent = fileInfo.getFileItem();
             //得到上传输入项
-            String filename = fileContent.getName();  //得到上传文件名
-            LOGGER.info("filename:{}", filename);
-            filename = filename.substring(filename.lastIndexOf("\\") + 1 );
+//            String filename = fileContent.getName();  //得到上传文件名
+//            LOGGER.info("filename:{}", filename);
+//            filename = filename.substring(filename.lastIndexOf("\\") + 1 );
             InputStream in = fileContent.getInputStream();   //得到上传数据
             int len = 0;
             byte[] buffer = new byte[1024];
 
-            File file = new File(targetDir + "\\" + filename);
-            file.deleteOnExit();
+//            File file = new File(targetDir + "\\" + filename);
+            targetFile.deleteOnExit();
 
-            if (!file.createNewFile()) {
-                LOGGER.info("文件创建失败, filename:{}", filename);
+            if (!targetFile.createNewFile()) {
+                LOGGER.info("文件创建失败, filename:{}", targetFile.getName());
                 return;
             }
 
-            FileOutputStream out = new FileOutputStream(file);  //向upload目录中写入文件
+            FileOutputStream out = new FileOutputStream(targetFile);  //向upload目录中写入文件
             while ((len = in.read(buffer)) > 0 ) {
                 out.write(buffer, 0, len);
             }
@@ -133,7 +141,7 @@ public class UploadUtil {
             in.close();
             out.close();
 
-            fileInfo.setFile(file);
+            fileInfo.setFile(targetFile);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
@@ -252,15 +260,15 @@ public class UploadUtil {
 
         Lock lock = null;
         try {
-            LOGGER.error("-----------targetFile.exists()------------");
+            LOGGER.info("-----------targetFile.exists()------------");
             if (!targetFile.exists()) {
                 targetFile.createNewFile();
             }
-            LOGGER.error("-----------targetFile.exists()------------");
+            LOGGER.info("-----------targetFile.exists()------------");
 
             lock = FileLockUtil.getLock(fileInfo.getIdentifier());
             lock.lock();
-            LOGGER.error("-----------lock------------");
+            LOGGER.info("-----------lock------------");
             //按照名称排序文件，这里分片都是按照数字命名的
             Collections.sort(files, new Comparator<File>() {
                 @Override
@@ -272,7 +280,7 @@ public class UploadUtil {
                 }
             });
 
-            LOGGER.error("-----------FileOutputStream------------");
+            LOGGER.info("-----------FileOutputStream------------");
             FileChannel outChannel = new FileOutputStream(targetFile).getChannel();
 
             //合并
@@ -287,9 +295,9 @@ public class UploadUtil {
                 }
             }
             outChannel.close();
-            LOGGER.error("-----------deleteOnExit------------");
+            LOGGER.info("-----------deleteOnExit------------");
             chunkDir.deleteOnExit();
-            LOGGER.error("-----------deleteOnExit------------");
+            LOGGER.info("-----------deleteOnExit------------");
 
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);

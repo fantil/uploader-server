@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.fanti.uploader.server.mapper.UserFileMapper">
+    <insert id="add" parameterType="org.fanti.uploader.server.db.UserFile" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_file (
+            user_id,
+            file_id,
+            dir_id,
+            create_time,
+            modify_time
+        ) VALUES (
+            #{userId},
+            #{fileId},
+            #{dirId},
+            #{createTime},
+            #{modifyTime}
+        )
+    </insert>
+
     <select id="getUserFileList" resultType="org.fanti.uploader.server.db.UserFile">
         SELECT
             f.id id,

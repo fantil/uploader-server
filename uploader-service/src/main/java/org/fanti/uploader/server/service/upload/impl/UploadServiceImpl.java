@@ -58,6 +58,7 @@ public class UploadServiceImpl implements UploadService {
 
         if (fileInfo.getTotalChunks() == 1) {
             UploadUtil.receiveSingleFile(fileInfo, uploadFolder);
+            this.saveFileInfo(fileInfo);
         } else {
             UploadUtil.receiveChunkFile(fileInfo, tmpUploadFolder);
         }
@@ -67,27 +68,7 @@ public class UploadServiceImpl implements UploadService {
     public void chunkMerge(FileInfo fileInfo) {
         UploadUtil.mergeChunks(fileInfo, uploadFolder, tmpUploadFolder);
 
-        if (fileInfo == null || fileInfo.getFile() == null) {
-            LOGGER.error("fileInfo or fileInfo.getFile is null");
-            return;
-        }
-        User user = UserUtil.getCurrentUser();
-
-        DBFile dbFile = FileUtil.initDBFile(fileInfo);
-        dbFileMapper.insert(dbFile);
-        List<DBFile> dbFileList = dbFileMapper.getDBFileList(dbFile.getMd5());
-
-        if (dbFileList.size() == 0) {
-            LOGGER.error("insert userDir failed");
-            return ;
-        }
-        LOGGER.info("dbFileList:{}", JSON.toJSONString(dbFileList));
-        int fileId = dbFileList.get(0).getId();
-
-        UserDir dir = userDirService.initUserDir(fileInfo);
-
-        UserFile userFile = UserFileUtil.initUserFile(user.getId(), fileId, dir.getId());
-        userFileMapper.insert(userFile);
+        this.saveFileInfo(fileInfo);
     }
 
     /**
@@ -121,5 +102,32 @@ public class UploadServiceImpl implements UploadService {
         }
 
         return false;
+    }
+
+    private void saveFileInfo(FileInfo fileInfo) {
+        if (fileInfo == null || fileInfo.getFile() == null) {
+            LOGGER.error("fileInfo or fileInfo.getFile is null");
+            return;
+        }
+        LOGGER.info("fileInfo:{}", JSON.toJSONString(fileInfo));
+        User user = UserUtil.getCurrentUser();
+
+        DBFile dbFile = FileUtil.initDBFile(fileInfo);
+        int fileId = dbFileMapper.add(dbFile);
+        LOGGER.info("fileId:{}", JSON.toJSONString(fileId));
+//        List<DBFile> dbFileList = dbFileMapper.getDBFileList(dbFile.getMd5());
+//
+//        if (dbFileList.size() == 0) {
+//            LOGGER.error("insert userDir failed");
+//            return ;
+//        }
+//        LOGGER.info("dbFileList:{}", JSON.toJSONString(dbFileList));
+//        int fileId = dbFileList.get(0).getId();
+
+        int dirId = userDirService.initUserDir(fileInfo);
+
+        UserFile userFile = UserFileUtil.initUserFile(user.getId(), fileId, dirId);
+        LOGGER.info("userFile:{}", JSON.toJSONString(userFile));
+        userFileMapper.add(userFile);
     }
 }

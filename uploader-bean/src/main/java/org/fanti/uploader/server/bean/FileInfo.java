@@ -78,6 +78,7 @@ public class FileInfo {
     /**
      * 文件相关字段项
      */
+    @JSONField(serialize = false)
     private FileItem fileItem;
 
     public int getChunkNumber() {

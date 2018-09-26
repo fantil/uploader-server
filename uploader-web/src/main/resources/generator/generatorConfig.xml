@@ -39,7 +39,7 @@
     </plugin>
 
     <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                    connectionURL="jdbc:mysql://192.168.10.11:3306/uploader"
+                    connectionURL="jdbc:mysql://127.0.0.1:3306/uploader"
                     userId="uploader"
                     password="uploader">
     </jdbcConnection>

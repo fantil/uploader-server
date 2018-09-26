@@ -41,13 +41,13 @@ public class UserDirServiceImpl extends BaseMapperService<UserDir> implements Us
     UserFileMapper userFileMapper;
 
     @Override
-    public UserDir initUserDir(FileInfo fileInfo) {
+    public int initUserDir(FileInfo fileInfo) {
         User user = UserUtil.getCurrentUser();
 
         DirUtil.initFullRelativePath(fileInfo);
         if (StringUtil.isNullString(fileInfo.getFullRelativePath())) {
             LOGGER.error("文件完整相对路径为空！");
-            return null;
+            return 0;
         }
 
         List<UserDir> userDirList = userDirMapper.getUserDirListWithFullPath(user.getId(), fileInfo.getFullRelativePath());
@@ -57,52 +57,39 @@ public class UserDirServiceImpl extends BaseMapperService<UserDir> implements Us
             UserDir userDir = DirUtil.initUserDirList(userDirList, fileInfo.getFullRelativePath());
 
             LOGGER.info("userDir:{}", JSON.toJSONString(userDir));
-            userDir = this.createUserDir(userDir, fileInfo.getFullRelativePath());
-            return userDir;
+            return this.createUserDir(userDir, fileInfo.getFullRelativePath());
         }
 
         LOGGER.info("userDirList:{}", JSON.toJSONString(userDirList));
-        return userDirList.get(0);
+        return userDirList.get(0).getId();
     }
 
     @Override
-    public UserDir createUserDir(UserDir userDir, String fullPath) {
+    public int createUserDir(UserDir userDir, String fullPath) {
         if (userDir == null) {
-            return null;
+            return 0;
         }
 
         User user = UserUtil.getCurrentUser();
         userDir.setUserId(user.getId());
 
         if (userDir.getFullPath().equals(fullPath)) {
-            userDirMapper.insert(userDir);
-
-            return this.getUserDirByUserIdAndFullPath(user.getId(), userDir.getFullPath());
+            return userDirMapper.add(userDir);
         }
 
-        userDirMapper.insert(userDir);
-        UserDir dir = getUserDirByUserIdAndFullPath(user.getId(), userDir.getFullPath());
-        if (dir == null) {
-            LOGGER.error("userDir is null");
-            return null;
-        }
-        int parentDirId = dir.getId();
+        int dirId = userDirMapper.add(userDir);
+        int parentDirId = dirId;
         while (!fullPath.equals(userDir.getFullPath())) {
             userDir = DirUtil.nextUserDir(userDir, fullPath, parentDirId);
             LOGGER.info("userDir:{}", JSON.toJSONString(userDir, true));
-            userDirMapper.insert(userDir);
+            dirId = userDirMapper.add(userDir);
 
-            dir = getUserDirByUserIdAndFullPath(user.getId(), userDir.getFullPath());
-            if (dir == null) {
-                LOGGER.error("userDir is null");
-                return null;
-            }
-            parentDirId = dir.getId();
+            parentDirId = dirId;
         }
 
         userDir.setId(parentDirId);
         LOGGER.info("userDir:{}", JSON.toJSONString(userDir));
-        return userDir;
+        return userDir.getId();
     }
 
     @Override
