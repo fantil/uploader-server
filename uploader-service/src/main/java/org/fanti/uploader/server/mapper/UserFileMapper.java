@@ -16,7 +16,7 @@ import java.util.List;
 
 @Service
 public interface UserFileMapper extends Mapper<UserFile> {
-    int add(UserFile userFile);
+    int insertReturnId(UserFile userFile);
 
     List<UserFile> getUserFileList(@Param("dirId") int dirId);
 }

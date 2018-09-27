@@ -113,21 +113,14 @@ public class UploadServiceImpl implements UploadService {
         User user = UserUtil.getCurrentUser();
 
         DBFile dbFile = FileUtil.initDBFile(fileInfo);
-        int fileId = dbFileMapper.add(dbFile);
-        LOGGER.info("fileId:{}", JSON.toJSONString(fileId));
-//        List<DBFile> dbFileList = dbFileMapper.getDBFileList(dbFile.getMd5());
-//
-//        if (dbFileList.size() == 0) {
-//            LOGGER.error("insert userDir failed");
-//            return ;
-//        }
-//        LOGGER.info("dbFileList:{}", JSON.toJSONString(dbFileList));
-//        int fileId = dbFileList.get(0).getId();
+        dbFileMapper.insertReturnId(dbFile);
+        LOGGER.info("fileId:{}", JSON.toJSONString(dbFile.getId()));
 
         int dirId = userDirService.initUserDir(fileInfo);
 
-        UserFile userFile = UserFileUtil.initUserFile(user.getId(), fileId, dirId);
+        UserFile userFile = UserFileUtil.initUserFile(user.getId(), dbFile.getId(), dirId);
         LOGGER.info("userFile:{}", JSON.toJSONString(userFile));
-        userFileMapper.add(userFile);
+        userFileMapper.insertReturnId(userFile);
+        LOGGER.info("userFileId:{}", JSON.toJSONString(userFile.getId()));
     }
 }
