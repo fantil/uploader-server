@@ -1,6 +1,7 @@
 package org.fanti.uploader.server.util;
 
 import com.alibaba.fastjson.JSON;
+import com.sun.org.apache.regexp.internal.RE;
 import org.fanti.uploader.server.bean.FileInfo;
 import org.fanti.uploader.server.db.DBFile;
 import org.fanti.uploader.server.db.UserDir;
@@ -22,6 +23,9 @@ import java.util.List;
 
 public class DirUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(DirUtil.class);
+
+    private static final String UNIX_SEPARATOR = "/";
+    private static final String WINDOWS_SEPARATOR = "\\";
 
     /**
      * 加载文件的完整相对路径
@@ -176,6 +180,9 @@ public class DirUtil {
      */
     public static String replaceFileSeparator(String path) {
         LOGGER.info("path:{}", path);
+        if (!path.startsWith(UNIX_SEPARATOR) && !path.startsWith(WINDOWS_SEPARATOR)) {
+            return path;
+        }
         String separator = path.substring(0, 1);
 
         if (!File.separator.equals(separator)) {
